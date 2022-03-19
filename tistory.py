@@ -17,6 +17,7 @@ class Tistory:
         self.secret_key = os.environ.get("TISTORY_SECRET_KEY")
         self.tistory_id = os.environ.get('TISTORY_ID')
         self.tistory_pwd = os.environ.get('TISTORY_PWD')
+        self.tistory_rss = blogUrl + "rss"
 
         # Github Actions params
         # self.app_id = os.environ['TISTORY_APP_ID']

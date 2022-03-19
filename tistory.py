@@ -24,6 +24,7 @@ class Tistory:
         # self.secret_key = os.environ['TISTORY_SECRET_KEY']
         # self.tistory_id = os.environ['TISTORY_ID']
         # self.tistory_pwd = os.environ['TISTORY_PWD']
+        # self.tistory_rss = blogUrl + "rss"
 
         # Etc params
         self.callback_url = blogUrl

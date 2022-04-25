@@ -97,6 +97,7 @@ class GithubBlog:
 
         file = get_repo_specific_file_content(repo, target_path)
         self.md_head, self.md_body = preprocess(file, target_path)
+        return self.md_head, self.md_body
 
     def parsing_xml(self):
         html = requests.get(self.xml)
@@ -113,7 +114,8 @@ class GithubBlog:
             }
             self.contents.append(article)
 
-if __name__ == "__main__":
-    githubBlog = GithubBlog("https://ruby-kim.github.io")
-    githubBlog.parsing_xml()
-    githubBlog.parsing_md("/AWS/IAM.md")
+
+# if __name__ == "__main__":
+#     githubBlog = GithubBlog("https://ruby-kim.github.io")
+#     githubBlog.parsing_xml()
+#     githubBlog.parsing_md("/AWS/IAM.md")

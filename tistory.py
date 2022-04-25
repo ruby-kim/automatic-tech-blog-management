@@ -4,13 +4,14 @@ from selenium.webdriver.common.by import By
 from urllib.parse import unquote
 import time
 import os
+import json
 
 # local import
 from dotenv import load_dotenv
 
 
 class Tistory:
-    def __init__(self, blogUrl):
+    def __init__(self, blogUrl, platform):
         # local params
         load_dotenv()
         self.app_id = os.environ.get("TISTORY_APP_ID")
@@ -34,6 +35,7 @@ class Tistory:
         # selenium setting params
         self.webdriver_options = webdriver.ChromeOptions()
         self.webdriver_options.add_argument('headless')
+        self.chromedriver = "./chromedriver/chromedriver" + platform
 
     def login_kakao(self, browser):
         """
@@ -97,7 +99,7 @@ class Tistory:
         :return: access-token
         """
         browser = webdriver.Chrome(
-            executable_path='./chromedriver/chromedriver.exe',
+            executable_path=self.chromedriver,
             options=self.webdriver_options
         )
         self.login_kakao(browser)
@@ -106,9 +108,32 @@ class Tistory:
             assert "Non-existence access token"
         else:
             assert "Generate access token Successfully"
-        return self.access_token
 
+    def posting(self, title, content, category, tag):
+        try:
+            tistory_url = 'https://www.tistory.com/apis/post/write?'
 
-if __name__ == "__main__":
-    tistory = Tistory('https://dev-rubykim.tistory.com/')
-    print(tistory.get_access_token())
+            headers = {'Content-Type': 'application/json; charset=utf-8'}
+            params = {
+                'access_token': self.access_token,
+                'output': 'json',
+                'blogName': 'dev-rubykim',
+                'title': title,
+                'content': content,
+                'visibility': '0',
+                'category': str(category[1:-1]),
+                'published':'',
+                'slogan':'',
+                'tag': str(tag[1:-1]),
+                'acceptComment': '1',
+                'password':''
+            }
+            data=json.dumps(params)
+            response = requests.post(tistory_url, headers=headers, data=data)
+            print(response.text)
+        except:
+            print("Error while uploading post in Tistory!")
+
+# if __name__ == "__main__":
+#     tistory = Tistory('https://dev-rubykim.tistory.com/')
+#     print(tistory.get_access_token())

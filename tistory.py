@@ -1,3 +1,4 @@
+from itsdangerous import exc
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -5,6 +6,7 @@ from urllib.parse import unquote
 import time
 import os
 import json
+from bs4 import BeautifulSoup
 
 # local import
 from dotenv import load_dotenv
@@ -19,6 +21,8 @@ class Tistory:
         self.tistory_id = os.environ.get('TISTORY_ID')
         self.tistory_pwd = os.environ.get('TISTORY_PWD')
         self.tistory_rss = blogUrl + "rss"
+        self.toc = []
+        self.contents = []
 
         # Github Actions params
         # self.app_id = os.environ['TISTORY_APP_ID']
@@ -42,7 +46,7 @@ class Tistory:
         login kakao account
 
         :param browser: chrome webdriver (windows: .exe)
-        :return:
+        return None
         """
         browser.get(self.oauth_url + "?client_id=" + self.app_id
                     + "&redirect_uri=" + self.callback_url + "&response_type=code")
@@ -61,7 +65,7 @@ class Tistory:
         clicking confirm button in tistory oauth page
 
         :param browser: chrome webdriver (windows: .exe)
-        :return:
+        return None
         """
         time.sleep(5)
         browser.get(browser.current_url)
@@ -96,7 +100,7 @@ class Tistory:
         """
         generate access-token automatically
 
-        :return: access-token
+        return access-token
         """
         browser = webdriver.Chrome(
             executable_path=self.chromedriver,
@@ -110,6 +114,15 @@ class Tistory:
             assert "Generate access token Successfully"
 
     def posting(self, title, content, category, tag):
+        """
+        upload the post to tistory
+
+        :param title: title based on github blog setting
+        :param content: content based on github blog setting
+        :param category: category based on github blog setting
+        :param tag: tag based on github blog setting
+        return None
+        """
         try:
             tistory_url = 'https://www.tistory.com/apis/post/write?'
 
@@ -134,6 +147,91 @@ class Tistory:
         except:
             print("Error while uploading post in Tistory!")
 
-# if __name__ == "__main__":
-#     tistory = Tistory('https://dev-rubykim.tistory.com/')
-#     print(tistory.get_access_token())
+    def editing(self, title, content, category, tag, postId):
+        """
+        update the existence post in tistory
+
+        :param title: title based on github blog setting
+        :param content: content based on github blog setting
+        :param category: category based on github blog setting
+        :param tag: tag based on github blog setting
+        :param postId: the target tistory postId
+
+        return None
+        """
+        try:
+            tistory_url = 'https://www.tistory.com/apis/post/modify?'
+
+            headers = {'Content-Type': 'application/json; charset=utf-8'}
+            params = {
+                'access_token': self.access_token,
+                'output': 'json',
+                'blogName': 'dev-rubykim',
+                'postId': postId,
+                'title': title,
+                'content': content,
+                'visibility': '20',
+                'category': str(category[1:-1]),
+                'published':'',
+                'slogan':'',
+                'tag': str(tag[1:-1]),
+                'acceptComment': '1',
+                'password':''
+            }
+            data=json.dumps(params)
+            response = requests.post(tistory_url, headers=headers, data=data)
+            print(response.text)
+        except:
+            print("Error while editing post in Tistory!")
+
+    def toc_post(self):
+        """
+        tistory content list
+        
+        return access-token
+        """
+        page = 1
+        tistory_url = 'https://www.tistory.com/apis/post/list?'
+        headers = {'Content-Type': 'application/json; charset=utf-8'}
+        params = {
+            'access_token': self.access_token,
+            'output': 'json',
+            'blogName': 'dev-rubykim',
+        }
+        while True:
+            params['page'] = page
+            data=json.dumps(params)
+            response = requests.get(tistory_url, headers=headers, data=data)
+            if response.status_code == 400:
+                break
+            try:
+                res = json.loads(response.text)
+                for item in res["tistory"]["item"]["posts"]:
+                    toc = {
+                        "id": item["id"],
+                        "postUrl": item["postUrl"],
+                        "date": item["date"],
+                        "title": item["title"]
+                    }
+                    self.toc.append(toc)
+                page += 1
+            except:
+                break
+
+    def parsing_rss(self):
+        """
+        parsing tistory rss
+        
+        return access-token
+        """
+        html = requests.get(self.tistory_rss)
+        soup = BeautifulSoup(html.text, "html.parser")
+        for elem in soup.find_all("item"):
+            article = {
+                "title": elem.find("title").get_text(),
+                "link": elem.find("guid").get_text("ispermalink"),
+                "published": elem.find("pubdate").get_text(),
+                "category": elem.find("category").get_text(),
+                "tags": [c.get_text() for c in elem.find_all("category")],
+            }
+            self.contents.append(article)

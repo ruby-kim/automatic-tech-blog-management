@@ -15,7 +15,8 @@ def get_github_repo(access_token, repo_name):
 
     :param access_token: Personal Access Token from Github
     :param repo_name: repository name
-    :return: repository object
+    
+    return repository object
     """
     g = Github(access_token)
     repository = g.get_user().get_repo(repo_name)
@@ -28,7 +29,8 @@ def get_repo_specific_file_content(repository, file_path):
 
     :param repository: repository object
     :param file_path: file path
-    :return: raw content of the decoded target file
+    
+    return raw content of the decoded target file
     """
     target_file = repository.get_contents("source/_posts" + file_path)
     raw_content = target_file.decoded_content
@@ -40,7 +42,8 @@ def preprocess(content, target_path):
     preprocess the raw content
 
     :param content: the decoded target file
-    :return: content_head(dict), content_body(str)
+    
+    return content_head(dict), content_body(str)
     """
     def rindex(lst, val):
         lst.reverse()
@@ -113,9 +116,3 @@ class GithubBlog:
                          for idx, c in enumerate(elem.find_all("category")) if idx != 0],
             }
             self.contents.append(article)
-
-
-# if __name__ == "__main__":
-#     githubBlog = GithubBlog("https://ruby-kim.github.io")
-#     githubBlog.parsing_xml()
-#     githubBlog.parsing_md("/AWS/IAM.md")

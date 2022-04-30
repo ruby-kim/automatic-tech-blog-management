@@ -170,7 +170,7 @@ class Tistory:
                 'postId': postId,
                 'title': title,
                 'content': content,
-                'visibility': '20',
+                'visibility': '3',
                 'category': str(category[1:-1]),
                 'published':'',
                 'slogan':'',
